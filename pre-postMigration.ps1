@@ -5,6 +5,10 @@ $argMigrationStage = $args[0]
 
 $logLocationInput = $(Get-Location) # this location when using az cli invoke command will position file in "c:\azure"
 $instanceName = $env:computername
+$domainName = $(sysinfo | select-string domain)
+$osArchitectureType = $(sysinfo | select-string "system type")
+$fileCheck = $(Test-Path -Path C:\Windows\system32\drivers\vmstorfl.sys)
+$bootType = $env:firmware_type
 $osVersion = $(Get-WmiObject -class Win32_OperatingSystem).caption
 #$guidGen = $([guid]::NewGuid().ToString())
 #$guidGenShort = $guidGen.substring(0,8)
@@ -19,6 +23,37 @@ $logLocation = New-Item -Path $logLocationInput -Name "$argMigrationStage-$insta
 Write-Output "Computer Name: $instanceName" | Out-File -Append $logLocation
 Write-Output "" | Out-File -Append $logLocation
 Write-Output "$osVersion" | Out-File -Append $logLocation
+
+# get domain joined
+
+Write-output "Domain Details" | Out-File -Append $logLocation
+Write-output $domainName | Out-File -Append $logLocation
+Write-Output "" | Out-File -Append $logLocation
+
+# get os architecture type 32bit vs 64bit
+
+Write-output "OS Architecture Type" | Out-File -Append $logLocation
+Write-output $osArchitectureType | Out-File -Append $logLocation
+Write-Output "" | Out-File -Append $logLocation
+
+# get boot type e.g. bios(legacy) or UEFI
+
+Write-output "Boot Type" | Out-File -Append $logLocation
+Write-output $bootType | Out-File -Append $logLocation
+Write-Output "" | Out-File -Append $logLocation
+
+# check if vmstorfl.sys exists - required for ASR to migrate VM's
+
+If (Test-Path -Path C:\Windows\system32\drivers\vmstorfl.sys) {
+    Write-Output "vmstorfl.sys exists" | Out-File $logLocation -append
+}
+else{
+    Write-Output "vmstorfl.sys doesn't exists" | Out-File $logLocation -append
+}
+
+# add a copy nested else statement to create dummy file: "copy nul c:\Windows\system32\drivers\vmstorfl.sys"
+
+Write-Output "" | Out-File -Append $logLocation
 
 # last reboot checker greater or equal to 30 days
 
