@@ -5,9 +5,6 @@ $argMigrationStage = $args[0]
 
 $logLocationInput = $(Get-Location) # this location when using az cli invoke command will position file in "c:\azure"
 $instanceName = $env:computername
-$domainName = $(sysinfo | select-string domain)
-$osArchitectureType = $(sysinfo | select-string "system type")
-$fileCheck = $(Test-Path -Path C:\Windows\system32\drivers\vmstorfl.sys)
 $bootType = $env:firmware_type
 $osVersion = $(Get-WmiObject -class Win32_OperatingSystem).caption
 #$guidGen = $([guid]::NewGuid().ToString())
@@ -23,18 +20,6 @@ $logLocation = New-Item -Path $logLocationInput -Name "$argMigrationStage-$insta
 Write-Output "Computer Name: $instanceName" | Out-File -Append $logLocation
 Write-Output "" | Out-File -Append $logLocation
 Write-Output "$osVersion" | Out-File -Append $logLocation
-
-# get domain joined
-
-Write-output "Domain Details" | Out-File -Append $logLocation
-Write-output $domainName | Out-File -Append $logLocation
-Write-Output "" | Out-File -Append $logLocation
-
-# get os architecture type 32bit vs 64bit
-
-Write-output "OS Architecture Type" | Out-File -Append $logLocation
-Write-output $osArchitectureType | Out-File -Append $logLocation
-Write-Output "" | Out-File -Append $logLocation
 
 # get boot type e.g. bios(legacy) or UEFI
 
@@ -94,7 +79,7 @@ $logicaldisks = Get-WmiObject Win32_Logicaldisk | Select-Object SystemName,Devic
 # fetch drive letters and output physical and logic sector sizes for each drive
   
 $driveLetters = Get-PSDrive | Select-Object -ExpandProperty 'Name' | Select-String -Pattern '^[a-z]$'
-foreach($i in $driveLetters) {Write-Output "Drive Letter: $i"; Write-output ""; fsutil fsinfo ntfsinfo $i":" | select-string "Sector"} | Out-File $logLocation -append
+foreach($i in $driveLetters) {Write-Output "Drive Letter: $i"; Write-output ""; fsutil fsinfo ntfsinfo $i":"; Write-output "" | select-string "Sector" | Out-File $logLocation -append}
 
 # Check if there is disk encryption
 
