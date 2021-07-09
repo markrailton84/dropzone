@@ -91,6 +91,11 @@ Write-Output $bootchecker | Out-File -Append $logLocation
 
 $logicaldisks = Get-WmiObject Win32_Logicaldisk | Select-Object SystemName,DeviceID,@{Name="size(GB)"; Expression={[math]::round($_.size/1GB)}} | Format-Table -AutoSize | Out-File $logLocation -append
 
+# fetch drive letters and output physical and logic sector sizes for each drive
+  
+$driveLetters = Get-PSDrive | Select-Object -ExpandProperty 'Name' | Select-String -Pattern '^[a-z]$'
+foreach($i in $driveLetters) {Write-Output "Drive Letter: $i"; Write-output ""; fsutil fsinfo ntfsinfo $i":" | select-string "Sector"} | Out-File $logLocation -append
+
 # Check if there is disk encryption
 
 $BLockerCheck = manage-bde -status
@@ -146,6 +151,10 @@ if ($gatewayCheck -eq "True"){
 else{
     Write-Output "Gateway Unreachable - $gatewayAddress" | Out-File -Append $logLocation
 }
+
+# Get .NET Framework versions installed
+
+Get-ChildItem 'HKLM:\SOFTWARE\Microsoft\NET Framework Setup\NDP' -Recurse | Get-ItemProperty -Name version -EA 0 | Where { $_.PSChildName -Match '^(?!S)\p{L}'} | Select PSChildName, version | out-file $logLocation -append
 
 # fetch running services
 
