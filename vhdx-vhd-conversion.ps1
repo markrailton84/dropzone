@@ -12,6 +12,10 @@ Install-Module -Name AzureRM.BootStrapper
 Use-AzureRmProfile -Profile 2019-03-01-hybrid -Force
 Install-Module -Name AzureStack -RequiredVersion 1.8.3
 
+# conversion command
+
+# convert-vhd -path "local path c:\somepath\somefile.vhdx" -destinationpath "destination path c:\somepath\somefile.vhd" -vhdtype fixed -verbose  
+
 # variable delcared
 
 $rgName = "resourceGroupName"
