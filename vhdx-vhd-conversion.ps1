@@ -13,8 +13,11 @@ Use-AzureRmProfile -Profile 2019-03-01-hybrid -Force
 Install-Module -Name AzureStack -RequiredVersion 1.8.3
 
 # conversion command
+# Perform conversion on host: lhcctxpvs01 ( via vdi )
+# VHDx Parent location: E:\Revers Imaging\
+# Run command in Powershell ISE ( administrator mode )
 
-# convert-vhd -path "local path c:\somepath\somefile.vhdx" -destinationpath "destination path c:\somepath\somefile.vhd" -vhdtype fixed -verbose  
+convert-vhd -path "local path c:\somepath\somefile.vhdx" -destinationpath "destination path c:\somepath\somefile.vhd" -vhdtype fixed -verbose  
 
 # variable delcared
 
