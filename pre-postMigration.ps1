@@ -21,6 +21,13 @@ Write-Output "Computer Name: $instanceName" | Out-File -Append $logLocation
 Write-Output "" | Out-File -Append $logLocation
 Write-Output "$osVersion" | Out-File -Append $logLocation
 
+# Domain Name (FQDN)
+
+$fqdn = ([System.Net.Dns]::GetHostByName(($env:computerName))).Hostname
+
+Write-Output "" | Out-File -Append $logLocation
+Write-Output "FQDN: $fqdn" | Out-File -Append $logLocation
+
 # get boot type e.g. bios(legacy) or UEFI
 
 Write-output "Boot Type" | Out-File -Append $logLocation
@@ -100,6 +107,31 @@ $NicsList = $ConnectedNics | Select-Object netconnectionid, name | Out-String
 $NicsCount = $ConnectedNics.Count
 Write-Output "Total Nics: $nicsCount" | Out-File -Append $logLocation
 Write-Output "" | Out-File -Append $logLocation
+
+# fetch vCPU
+
+$vcpu = (Get-CimInstance -ClassName 'Win32_Processor' | Measure-Object -Property 'NumberOfCores' -Sum).Sum
+Write-Output "vCPUs: $vcpu" | Out-File -Append $logLocation
+
+# fetch RAM
+
+$totalMemory = Get-CimInstance Win32_PhysicalMemory | Measure-Object -Property capacity -Sum | Foreach {"{0:N2}" -f ([math]::round(($_.Sum / 1GB),2))}
+Write-Output "RAM: $totalMemory GB" | Out-File -Append $logLocation
+
+# fetch total disk size
+ 
+$diskCapacity = Get-WmiObject Win32_LogicalDisk | Select-Object DeviceID, @{'Name' = 'Total Disk Size (GB)'; Expression= { ($_.Size) / 1GB }}
+Write-Output $diskCapacity | Out-File -Append $logLocation
+
+# fetch used disk size
+
+$usedSpace =  Get-WmiObject Win32_LogicalDisk | Select-Object DeviceID, @{'Name' = 'Used Disk Space (GB)'; Expression= { ($_.Size - $_.FreeSpace) / 1GB }}
+Write-Output $usedSpace | Out-File -Append $logLocation
+
+# fetch free disk size
+
+$usedSpace =  Get-WmiObject Win32_LogicalDisk | Select-Object DeviceID, @{'Name' = 'Free Disk Space (GB)'; Expression= { ($_.FreeSpace) / 1GB }}
+Write-Output $usedSpace | Out-File -Append $logLocation
 
 # fetch dns addresses
 
