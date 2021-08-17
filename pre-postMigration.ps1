@@ -123,12 +123,12 @@ Write-Output "RAM: $totalMemory GB" | Out-File -Append $logLocation
 $diskCapacity = Get-WmiObject Win32_LogicalDisk | Select-Object DeviceID, @{'Name' = 'Total Disk Size (GB)'; Expression= { ($_.Size) / 1GB }}
 Write-Output $diskCapacity | Out-File -Append $logLocation
 
-# fetch used disk size
+# fetch used disk space
 
 $usedSpace =  Get-WmiObject Win32_LogicalDisk | Select-Object DeviceID, @{'Name' = 'Used Disk Space (GB)'; Expression= { ($_.Size - $_.FreeSpace) / 1GB }}
 Write-Output $usedSpace | Out-File -Append $logLocation
 
-# fetch free disk size
+# fetch free disk space
 
 $usedSpace =  Get-WmiObject Win32_LogicalDisk | Select-Object DeviceID, @{'Name' = 'Free Disk Space (GB)'; Expression= { ($_.FreeSpace) / 1GB }}
 Write-Output $usedSpace | Out-File -Append $logLocation
