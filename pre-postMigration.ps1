@@ -21,7 +21,7 @@ Write-Output "Computer Name: $instanceName" | Out-File -Append $logLocation
 Write-Output "" | Out-File -Append $logLocation
 Write-Output "$osVersion" | Out-File -Append $logLocation
 
-# Domain Name (FQDN)
+# Fetch Domain Name (FQDN)
 
 $fqdn = ([System.Net.Dns]::GetHostByName(($env:computerName))).Hostname
 
