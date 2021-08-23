@@ -34,6 +34,16 @@ Write-output "Boot Type" | Out-File -Append $logLocation
 Write-output $bootType | Out-File -Append $logLocation
 Write-Output "" | Out-File -Append $logLocation
 
+# fetch RAM
+
+$totalMemory = Get-CimInstance Win32_PhysicalMemory | Measure-Object -Property capacity -Sum | Foreach {"{0:N2}" -f ([math]::round(($_.Sum / 1GB),2))}
+Write-Output "RAM: $totalMemory GB" | Out-File -Append $logLocation
+
+# fetch vCPU
+
+$vcpu = (Get-CimInstance -ClassName 'Win32_Processor' | Measure-Object -Property 'NumberOfCores' -Sum).Sum
+Write-Output "vCPUs: $vcpu" | Out-File -Append $logLocation
+
 # check if vmstorfl.sys exists - required for ASR to migrate VM's
 
 If (Test-Path -Path C:\Windows\system32\drivers\vmstorfl.sys) {
@@ -98,6 +108,12 @@ if (-Not($BLockerCheck | Select-String "Protection On")) {
 }
 Write-Output "" | Out-File -Append $logLocation
 
+# fetch network properties
+
+$networkProperties = (Get-DnsClientServerAddress -AddressFamily IPv4 | Select-Object InterfaceAlias, AddressFamily, ServerAddresses)
+
+Write-Output $networkProperties | Out-File -Append $logLocation
+
 # fetch networking related info
 
 $ipAddressBound = Get-WmiObject Win32_NetworkAdapterConfiguration -Filter 'IPEnabled=TRUE' | Select-Object -ExpandProperty IPAddress | Where-Object { $_ -match '(\d{1,3}\.){3}\d{1,3}' } | Out-File $logLocation -append
@@ -108,16 +124,6 @@ $NicsCount = $ConnectedNics.Count
 Write-Output "Total Nics: $nicsCount" | Out-File -Append $logLocation
 Write-Output "" | Out-File -Append $logLocation
 
-# fetch vCPU
-
-$vcpu = (Get-CimInstance -ClassName 'Win32_Processor' | Measure-Object -Property 'NumberOfCores' -Sum).Sum
-Write-Output "vCPUs: $vcpu" | Out-File -Append $logLocation
-
-# fetch RAM
-
-$totalMemory = Get-CimInstance Win32_PhysicalMemory | Measure-Object -Property capacity -Sum | Foreach {"{0:N2}" -f ([math]::round(($_.Sum / 1GB),2))}
-Write-Output "RAM: $totalMemory GB" | Out-File -Append $logLocation
-
 # fetch total disk size
  
 $diskCapacity = Get-WmiObject Win32_LogicalDisk | Select-Object DeviceID, @{'Name' = 'Total Disk Size (GB)'; Expression= { ($_.Size) / 1GB }}
@@ -127,6 +133,29 @@ Write-Output $diskCapacity | Out-File -Append $logLocation
 
 $usedSpace =  Get-WmiObject Win32_LogicalDisk | Select-Object DeviceID, @{'Name' = 'Used Disk Space (GB)'; Expression= { ($_.Size - $_.FreeSpace) / 1GB }}
 Write-Output $usedSpace | Out-File -Append $logLocation
+
+# fetch Disk Model - VMDK or NetApp iSCSI
+
+$diskModel = (Get-WmiObject Win32_DiskDrive | ForEach-Object {
+  $disk = $_
+  $partitions = "ASSOCIATORS OF " +
+                "{Win32_DiskDrive.DeviceID='$($disk.DeviceID)'} " +
+                "WHERE AssocClass = Win32_DiskDriveToDiskPartition"
+  Get-WmiObject -Query $partitions | ForEach-Object {
+    $partition = $_
+    $drives = "ASSOCIATORS OF " +
+              "{Win32_DiskPartition.DeviceID='$($partition.DeviceID)'} " +
+              "WHERE AssocClass = Win32_LogicalDiskToPartition"
+    Get-WmiObject -Query $drives | ForEach-Object {
+      New-Object -Type PSCustomObject -Property @{
+        DiskModel   = $disk.Model
+        DriveLetter = $_.DeviceID
+        VolumeName  = $_.VolumeName
+      }
+    }
+  }
+})
+Write-Output $diskModel | Out-File -Append $logLocation
 
 # fetch free disk space
 
