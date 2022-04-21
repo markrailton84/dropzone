@@ -1,0 +1,4 @@
+creation_rules:
+  - path_regex: .*
+    encrypted_regex: ".*password"
+    azure_kv: "https://teskvsops.vault.azure.net/keys/testsopskey/d921baebae3b41069820974b9c215087"
